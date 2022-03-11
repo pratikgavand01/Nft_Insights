@@ -1,4 +1,4 @@
-class DiscordRequests
+class DiscordRequests < ApplicationServices
   HEADERS = {"Content-Type": "application/json"}
   URL = ENV["discord_webhook"]
 
