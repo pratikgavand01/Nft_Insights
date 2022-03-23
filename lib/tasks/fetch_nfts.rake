@@ -1,7 +1,8 @@
 namespace :fetch_nfts do
   desc "TODO"
   task fetch_top_collections: :environment do
-       IcyRequest.get_and_set_top_collections
+    IcyRequest.fetch_collections_and_post_to_discord
+    DiscordRequests.post_message
   end
 
   desc "TODO"
@@ -9,4 +10,4 @@ namespace :fetch_nfts do
     OpenseaRequests.set_collection_events_by_type(args[:slug],args[:type])
   end  
   
-  end
+end

@@ -3,14 +3,14 @@ class ApplicationServices
     class << self
 
       def get_collection_data(time = Time.now-2.minutes)
-        top_collections = Kredis.json("top_collections")
+        top_collections = Kredis.json("recent_top_collections")
         top_collections = HashWithIndifferentAccess.new(top_collections.value)
         collections = top_collections[parse_to_string(time)]
 
         puts collections.count
         collections_data = [] 
         collections && collections.map do |collection|
-          collections_data << collection_formated_data(collection, time)
+          collections_data << collection_formated_data(collection)
         end 
         collections_data
       end
@@ -48,12 +48,14 @@ class ApplicationServices
 
       def collection_formated_data(data)
         HashWithIndifferentAccess.new({ 
-          name: data[:collection][:name], 
-          supply: data[:collection][:stats][:total_supply],
-          holder_ratio: holder_ratio(data[:collection][:stats]),
-          floor_price: data[:collection][:stats][:floor_price]
+          name: data[:name], 
+          total_supply: data[:total_supply],
+          holder_ratio: data[:holder_ratio],
+          floor_price: data[:floor_price],
+          total_sales: data[:total_sales],
+          pricing: data[:pricing]
          }) 
-      end  
+      end
 
       def holder_ratio(stats)
         ratio = (stats[:num_owners]/stats[:total_supply].to_f)*100
@@ -79,17 +81,27 @@ class ApplicationServices
         asset_events.value = data    
      end
 
-     def save_top_collections(collections, time_stamp)
-        top_collections = Kredis.json("top_collections")
-        data = HashWithIndifferentAccess.new(top_collections.value)
-        data[time_stamp] = collections
-        top_collections.value = data    
+     def save_top_collections(collections)
+        attributes = []
+        collections.each do |collection|
+          attributes << {
+            slug: collection["collection"]["slug"],
+            name: collection["collection"]["name"],
+            description: collection["collection"]["description"],
+            url: collection["collection"]["external_url"],
+            stats: collection["collection"]["stats"],
+            details: collection["collection"],
+          }
+        end
+        if attributes.count > 0
+          collection = Collection.upsert_all(attributes, unique_by: :slug)
+        end
+        collection
      end
 
      def parse_to_string(time)
         Time.parse(time.to_s).strftime('%Y-%m-%dT%H:%M')
      end  
-
 
      def save_all_assets_data(assets, slug)
        asset_events = Kredis.json("fetch_all_events")
