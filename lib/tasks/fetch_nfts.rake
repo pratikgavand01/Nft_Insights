@@ -48,7 +48,7 @@ namespace :fetch_nfts do
   end
 
   desc "Fetch past data and store events data fro Cancelled Event"
-  task :historic_create_events_backfiling => [:environment] do |task, args|
+  task :historic_cancelled_events_backfiling => [:environment] do |task, args|
     start_time = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%S')
     OpenseaRequests.fetch_events("past_data", start_time, nil, "cancelled")
   end
