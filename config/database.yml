@@ -18,8 +18,8 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  username: postgres
-  password: root 
+  username: <%=ENV["POSTGRES_USERNAME"]%>
+  password: <%=ENV["POSTGRES_PASSWORD"]%>
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
@@ -83,7 +83,6 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  <<: *default
-  database: nft_insights
-  username: blog_api
-  password: <%= ENV["BLOG_API_DATABASE_PASSWORD"] %>
+  # <<: *default
+  # database: nft_insights
+  url: <%= ENV["DATABASE_URL"] %>

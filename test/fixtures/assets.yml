@@ -3,7 +3,7 @@
 one:
   name: MyString
   description: MyString
-  contract_date: 2022-03-15 17:03:29
+  asset_contract_date: 2022-03-15 17:03:29
   url: MyText
   img_url: MyText
   collection: one
@@ -12,7 +12,7 @@ one:
 two:
   name: MyString
   description: MyString
-  contract_date: 2022-03-15 17:03:29
+  asset_contract_date: 2022-03-15 17:03:29
   url: MyText
   img_url: MyText
   collection: two

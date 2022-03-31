@@ -1,129 +1,66 @@
-
 class DiscordRequests < ApplicationServices
-  HEADERS = {"Content-Type": "application/json"}
-  URL = ENV["discord_webhook"]
+  HEADERS = {"Content-Type": "multipart/form-data"}
+  URL = ENV["DISCORD_WEBHOOK"]
 
+  # Collect data from redis and posted to Discord
   def self.post_message
-    # redis_collection = Kredis.json "collection"
     result = self.collect_data_to_post
-    fields = []
-    # result.each_with_index do |data, i|
-    #   fields << {
-    #      "name" => "#{i+1} \n #{data[:collection_name]}", 
-    #      "value" => "#{data[:number_of_supply]} | #{data[:holder_ratio]} | #{data[:floor_price]} | #{data[:floor_price_change].round(2)}% | #{data[:number_of_sales]} | #{data[:number_of_sales_change].round(2)}%"
-    #   }
-    # end
-    # result.each_with_index do |data, i|
-    #   fields << {
-    #      "name" => "NFT Collection | # of supply | Holder Ratio | Current Floor price (%Change) | # of sales(% Chnage)", 
-    #      "value" => "#{data[:collection_name]} | #{data[:number_of_supply]} | #{data[:holder_ratio]} | #{data[:floor_price]}(#{data[:floor_price_change].round(2)}%) | #{data[:number_of_sales]}(#{data[:number_of_sales_change].round(2)}%)"
-    #   }
-    # end
-    rows = []
+    rows_content= ""
     result.each_with_index do |data, i|
       pricing_string = ""
       data[:pricing].each_with_index do |(key, value), index|
-        if index >=2
+        if index >= 5
           break
         end 
-        pricing_string +=  "\n#{key.to_f/1000000000000000000} => #{value}"
+        pricing_string += "<div class='pricing'>
+                              <span style='float: left;'>#{(key.to_f/1000000000000000000).round(4)}</span>
+                              <span>=></span>
+                              <span style='float: right;'>#{value}</span>
+                            </div>"
       end
-      rows << ["#{data[:collection_name].truncate(10)}\n(#{data[:number_of_supply]})\n(#{data[:holder_ratio].round(2)}%)", "#{data[:floor_price]}\n(#{data[:floor_price_change]}%)", "#{data[:number_of_sales]}\n(#{data[:number_of_sales_change]}%)"]
-      fields << "**#{data[:collection_name]}** (#{data[:number_of_supply]}) (#{data[:holder_ratio]}%) **|** #{data[:floor_price]}(#{data[:floor_price_change]}%) **|** #{data[:number_of_sales]}(#{data[:number_of_sales_change]}%) | #{pricing_string}"
+      rows_content = rows_content +
+        "<tr>
+          <td><span>#{data[:collection_name]}</span><br/><span>(#{data[:number_of_supply]})</span><br/> <span class='text-grey'>(#{data[:holder_ratio].round(2)}%)</span> </td>
+          <td>#{data[:floor_price]} <br/><span class=#{select_color_class(data[:floor_price_change])}>(#{data[:floor_price_change]}%)</span></td>
+          <td>#{data[:number_of_sales]}<br/><span class=#{select_color_class(data[:number_of_sales_change])}>(#{data[:number_of_sales_change]}%)</span></td>
+          <td><div class='pricing_row'>#{pricing_string}</div></td>
+        </tr>"
     end
 
-    #format 1
-    # redis_collection.value["collections"].each_with_index do |data, i|
-    #   fields discord_webhook<< {
-    #     "name" => data["name"],
-    #     "value" => "#{data["stats"]["one_day_volume"].round(2)} | #{data["stats"]["seven_day_volume"].round(2)} | #{data["stats"]["thirty_day_volume"].round(2)} | #{data["stats"]["one_day_change"]*100}% | #{data["stats"]["seven_day_change"]*100}% | #{data["stats"]["floor_price"]} | #{data["stats"]["num_owners"]} | #{data["stats"]["count"]}"
-    #   }
-    # end
+    
+    kit = IMGKit.new(prepare_html(rows_content))
+    file = kit.to_file("public/nft_reports/stats.jpg")
 
-    #format 2
-    # redis_collection.value["collections"].each_with_index do |data, i|
-    #   fields << { 
-    #     "name" => "#{i+1} - #{data["name"]}", 
-    #     "value" => "1d Vol: #{data["stats"]["one_day_volume"].round(2)},  7d Vol: #{data["stats"]["seven_day_volume"].round(2)}, 30d Vol: 
-    #{data["stats"]["thirty_day_volume"].round(2)}, 1d%: #{data["stats"]["one_day_change"]*100}%,  7d%: #{data["stats"]["seven_day_change"]*100}%,  Floor Price: #{data["stats"]["floor_price"]},  Owners: #{data["stats"]["num_owners"]},  Items: #{data["stats"]["count"]}"
-    #   }
-    # end
-
-    #format 3
-    # embeds = []
-    # redis_collection.value["collections"].each_with_index do |data, i|
-    #   embeds << {
-    #     "title" => data["name"],
+    # body = {
+    #   "username" => "Testing NFT Analytics",
+    #   "avatar_url" => "https://i.imgur.com/4M34hi2.png",
+    #   "embeds" => [{
+    #     "title" => "Top 5 NFTs",
     #     "color" => 15258703,
-    #     "fields" => [{
-    #       "name" => "24h Volume", 
-    #       "value" => "#{data["stats"]["one_day_volume"].round(2)}",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "7d Volume", 
-    #       "value" => "#{data["stats"]["seven_day_volume"].round(2)}",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "30h Volume", 
-    #       "value" => "#{data["stats"]["thirty_day_volume"].round(2)}",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "1d Change", 
-    #       "value" => "#{data["stats"]["one_day_change"]*100}%",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "1d Change", 
-    #       "value" => "#{data["stats"]["seven_day_change"]*100}%",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "Floor Price", 
-    #       "value" => "#{data["stats"]["floor_price"]}",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "Owners", 
-    #       "value" => "#{data["stats"]["num_owners"]}",
-    #       "inline" => true
-    #     },
-    #     {
-    #       "name" => "Items", 
-    #       "value" => "#{data["stats"]["count"]}",
-    #       "inline" => true
+    #     "image" => {
+    #       "url"=> "http://efa8-210-89-62-14.ngrok.io/nft_reports/#{file.path.split("/")[-1]}"
+    #     }
     #     }]
     #   }
-    # end
-
-    # rows = []
-    
-    table = ::Terminal::Table.new
-    # table.headings = ["NFT\nsupply\nholder ratio", "Current\nfloor price\n(change)",  "# of sales\n(%change)"]
-
-    table.headings = ["NFT\n#supply\nHR", "FP\nchange","# of sales(%)"]
-    table.rows = rows
-
-
     body = {
-      "username" => "Testing NFT Analytics",
-      "avatar_url" => "https://i.imgur.com/4M34hi2.png",
-      "content" => "Testing New Updates",
-      # "embeds" => embeds #format 3
-
-      "embeds" => [{
-        "title" => "New Updates",
-        "color" => 15258703,
-        "fields" => [{
-           "name" => "NFT Collection (# of supply)(Holder Ratio) | Current Floor price (%Change) | # of sales(% Change)",
-           "value" => "```\n#{table}\n```"
-        }]
+      "username": "Testing NFT Analytics",
+      "avatar_url": "https://i.imgur.com/4M34hi2.png",
+      "content": "**Top 5 NFTs**",
+      # "embeds": [{
+      #   "title": "Top 5 NFTs",
+      #   "color": 15258703,
+      #   "image": {
+      #     "url": "attachment://#{file.path.split("/")[-1]}}"
+      #   }
+      #   }], 
+      "attachments": [{
+          "id": 0,
+          "description": "Image of a cute little cat",
+          "filename": file
       }]
-
-    }
-    response = HTTParty.post(URL, headers: HEADERS, body: body.to_json)
+      }
+  
+    response = HTTParty.post(URL, headers: HEADERS, body: body)
   end
 
   def self.collect_data_to_post
@@ -132,7 +69,6 @@ class DiscordRequests < ApplicationServices
     latest_key = aa.value.keys[-1]
     previous_data = DiscordRequests.get_collection_data(previous_key)
     latest_data = DiscordRequests.get_collection_data(latest_key)
-    debugger
     result = []
     latest_data.each do |data|
      last_record = previous_data.select{|a| a["name"] == data["name"]}
@@ -143,11 +79,71 @@ class DiscordRequests < ApplicationServices
         floor_price_change: last_record.present? ? (data["floor_price"] - last_record[0]["floor_price"]).round(2) : "N/A",
         number_of_sales: data["total_sales"].round(2) ,
         number_of_sales_change: last_record.present? ? (data["total_sales"] - last_record[0]["total_sales"]).round(2) : "N/A",
-        pricing: data["pricing"]
+        pricing: data["pricing"].sort_by{|k,v| k.to_i}.to_h
       }
     end
     result
   end
-end
 
+  def self.select_color_class(data)
+    class_name = data.to_f > 0 ? 'text-green' : (data.to_f < 0 ? 'text-red' : '')
+  end
+
+  def self.prepare_html(rows_content)
+    contect = "<!DOCTYPE html>
+                <html>
+                  <head>
+                    <style>
+                      table {
+                        font-family: arial, sans-serif;
+                        border-collapse: collapse;
+                        width: 100%;
+                        font-size: 12;
+                      }
+
+                      body {
+                        background-color: #000000;
+                        color: #fb8b1e;
+                      }
+
+                      td, th {
+                        border: 1px solid #1A2128;
+                        text-align: left;
+                        padding: 8px;
+                        font-size: 20px;
+                        color: #fb8b1e;
+                      }
+
+                      .pricing{
+                        text-align: center
+                      }
+
+                      .text-red{
+                        color: #ff433d;
+                      }
+
+                      .text-green{
+                        color: #4af6c3;
+                      }
+                      .text-grey{
+                        color: #a6b5c5
+                      }
+                    
+                    </style>
+                  </head>
+                  <body>
+                    <h2>Top NFT Collections</h2>
+                    <table>
+                      <tr>
+                        <th>NFT collections <br>(# of supply)<br>(Holder Ratio)</th>
+                        <th>Floor price<br>(%Change)</th>
+                        <th># of sales<br>(%Change)</th>
+                        <th>Pricing</th>
+                      </tr>
+                      #{rows_content}
+                    </table>
+                  </body>
+                </html>"
+  end
+end
 

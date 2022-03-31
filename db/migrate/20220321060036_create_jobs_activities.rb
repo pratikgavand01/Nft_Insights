@@ -1,6 +1,7 @@
 class CreateJobsActivities < ActiveRecord::Migration[7.0]
   def change
     create_table :jobs_activities do |t|
+      t.integer :job_name
       t.integer :job_type
       t.datetime :start_time
       t.datetime :end_time
