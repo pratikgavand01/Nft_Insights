@@ -12,10 +12,13 @@ class DiscordRequests < ApplicationServices
         if index >= 5
           break
         end 
+        price_key = (key.to_f/1000000000000000000).round(4)
+        number_of_nfts = value
+        number_of_nfts_change = data[:last_fetched_pricing][key].present? ? value - data[:last_fetched_pricing][key] : "N/A"
         pricing_string += "<div class='pricing'>
-                              <span style='float: left;'>#{(key.to_f/1000000000000000000).round(4)}</span>
+                              <span style='float: left;'>#{price_key}</span>
                               <span>=></span>
-                              <span style='float: right;'>#{value}</span>
+                              <span style='float: right;'>#{value} <span class=#{select_color_class(number_of_nfts_change)}>(#{number_of_nfts_change})</span>
                             </div>"
       end
       rows_content = rows_content +
@@ -23,11 +26,11 @@ class DiscordRequests < ApplicationServices
           <td><span>#{data[:collection_name]}</span><br/><span>(#{data[:number_of_supply]})</span><br/> <span class='text-grey'>(#{data[:holder_ratio].round(2)}%)</span> </td>
           <td>#{data[:floor_price]} <br/><span class=#{select_color_class(data[:floor_price_change])}>(#{data[:floor_price_change]}%)</span></td>
           <td>#{data[:number_of_sales]}<br/><span class=#{select_color_class(data[:number_of_sales_change])}>(#{data[:number_of_sales_change]}%)</span></td>
+          <td>#{data[:total_listed]}<br/><span class=#{select_color_class(data[:total_listed_change])}>(#{data[:total_listed_change]}%)</span></td>
           <td><div class='pricing_row'>#{pricing_string}</div></td>
         </tr>"
     end
 
-    
     kit = IMGKit.new(prepare_html(rows_content))
     file = kit.to_file("public/nft_reports/stats.jpg")
 
@@ -75,18 +78,21 @@ class DiscordRequests < ApplicationServices
      result << { collection_name: data["name"],
         number_of_supply: data["total_supply"],
         holder_ratio: data["holder_ratio"],
-        floor_price: data["floor_price"].round(2),
-        floor_price_change: last_record.present? ? (data["floor_price"] - last_record[0]["floor_price"]).round(2) : "N/A",
-        number_of_sales: data["total_sales"].round(2) ,
-        number_of_sales_change: last_record.present? ? (data["total_sales"] - last_record[0]["total_sales"]).round(2) : "N/A",
-        pricing: data["pricing"].sort_by{|k,v| k.to_i}.to_h
+        floor_price: data["floor_price"].round(4),
+        floor_price_change: last_record.present? ? self.get_change_in_percentage(data["floor_price"], last_record[0]["floor_price"]) : "N/A",
+        number_of_sales: data["total_sales"],
+        number_of_sales_change: last_record.present? ? self.get_change_in_percentage(data["total_sales"], last_record[0]["total_sales"]) : "N/A",
+        total_listed: data["total_listed"],
+        total_listed_change: last_record.present? ? data["total_listed"] - last_record[0]["total_listed"] : "N/A",
+        pricing: data["pricing"].sort_by{|k,v| k.to_i}.to_h,
+        last_fetched_pricing: last_record.present? ? last_record[0]["pricing"].sort_by{|k,v| k.to_i}.to_h : {}
       }
     end
     result
   end
 
   def self.select_color_class(data)
-    class_name = data.to_f > 0 ? 'text-green' : (data.to_f < 0 ? 'text-red' : '')
+    class_name = data.to_f > 0.0 ? 'text-green' : (data.to_f < 0.0 ? 'text-red' : 'text-grey')
   end
 
   def self.prepare_html(rows_content)
@@ -104,6 +110,14 @@ class DiscordRequests < ApplicationServices
                       body {
                         background-color: #000000;
                         color: #fb8b1e;
+                      }
+
+                      tr {
+                        vertical-align: top;
+                      }
+
+                      th {
+                        width: 20%;
                       }
 
                       td, th {
@@ -135,10 +149,11 @@ class DiscordRequests < ApplicationServices
                     <h2>Top NFT Collections</h2>
                     <table>
                       <tr>
-                        <th>NFT collections <br>(# of supply)<br>(Holder Ratio)</th>
-                        <th>Floor price<br>(%Change)</th>
-                        <th># of sales<br>(%Change)</th>
-                        <th>Pricing</th>
+                        <th>NFT collections <br>(# of supply)<br><span class='text-grey'>(Holder Ratio)</span></th>
+                        <th>Floor price<br><span class='text-grey'>(%Change)</span</th>
+                        <th># of Sales<br><span class='text-grey'>(%Change)</span></th>
+                        <th># Total Listed<br><span class='text-grey'>(%Change)</span></th>
+                        <th>Listing <br/><span class='text-grey'>(Price => #NFTs)</th>
                       </tr>
                       #{rows_content}
                     </table>

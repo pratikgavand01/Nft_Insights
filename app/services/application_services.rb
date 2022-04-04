@@ -30,7 +30,16 @@ class ApplicationServices
       #     total_listed: event.count,
       #     prices_list: prices_list
       #   })    
-      # end  
+      # end
+
+      def get_change_in_percentage(latest_value, previous_value)
+        begin
+          result = ((latest_value - previous_value)/previous_value)*100
+          result.round(2)
+        rescue
+          "N/A"
+        end
+      end
 
       private
 
@@ -46,6 +55,8 @@ class ApplicationServices
       #     })
       # end  
 
+
+
       def collection_formated_data(data)
         HashWithIndifferentAccess.new({ 
           name: data[:name], 
@@ -53,6 +64,7 @@ class ApplicationServices
           holder_ratio: data[:holder_ratio],
           floor_price: data[:floor_price],
           total_sales: data[:total_sales],
+          total_listed: data[:total_listed],
           pricing: data[:pricing]
          }) 
       end

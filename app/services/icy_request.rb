@@ -20,11 +20,16 @@ class IcyRequest < ApplicationServices
         collection = save_top_collections(top_collections)  # set top collections to redis database
       end
       top_collection_ids = collection.map{|x|x["id"]}
-      # stats = Collection.includes(:assets).where(id: top_collection_ids).map{|x| {name: x.name, total_supply: x.stats["total_supply"].to_i, total_sales: x.stats["total_sales"].to_i, holder_ratio: (x.stats["num_owners"]/x.stats["total_supply"].to_f)*100, floor_price: x.stats["floor_price"], pricing: x.assets.group('current_price').count }}
-      stats = Collection.includes(:assets).where(id: top_collection_ids).map{|x| {name: x.name, total_supply: x.stats["total_supply"].to_i, total_sales: x.stats["total_sales"].to_i, holder_ratio: self.send(:holder_ratio, x.stats), floor_price: x.stats["floor_price"], pricing: x.assets.group('current_price').count }}
-      # top_collections.each do |collection|
-      #   OpenseaRequests.set_collection_limited_events_by_type(collection[:collection][:slug], "created")
-      # end
+      stats = Collection.includes(:assets).where(id: top_collection_ids).map do |x|
+        { name: x.name,
+          total_supply: x.stats["total_supply"].to_i,
+          total_sales: x.stats["total_sales"].to_i,
+          holder_ratio: self.send(:holder_ratio, x.stats),
+          floor_price: x.stats["floor_price"],
+          total_listed: ((x.assets.listed.count / x.stats["total_supply"].to_f)*100).round(2),
+          pricing: x.assets.listed.group('current_price').count
+        }
+      end
       top_collections = Kredis.json("recent_top_collections")
       data = HashWithIndifferentAccess.new(top_collections.value)
       data[current_time] = stats
