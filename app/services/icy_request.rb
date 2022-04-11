@@ -16,10 +16,11 @@ class IcyRequest < ApplicationServices
     def get_and_set_top_collections(record_time = 1.hour, records = 100, sort_by = 'VOLUME', limit = 5)
       current_time = parse_to_string(Time.now.utc)
       top_collections = fetch_top_collections(record_time, records, sort_by, limit)
+      top_collection_ids = []
       if top_collections.present?
         collection = save_top_collections(top_collections)  # set top collections to redis database
+        top_collection_ids = collection.map{|x|x["id"]} rescue []
       end
-      top_collection_ids = collection.map{|x|x["id"]}
       stats = Collection.includes(:assets).where(id: top_collection_ids).map do |x|
         { name: x.name,
           total_supply: x.stats["total_supply"].to_i,

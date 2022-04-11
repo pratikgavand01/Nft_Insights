@@ -17,6 +17,9 @@ class CreateAssets < ActiveRecord::Migration[7.0]
 
       t.timestamps
     end
+
+    add_index :assets, :id, unique: true
+    add_index :assets, :price_updated_timestamp
     add_index :assets, :url, unique: true
   end
 end

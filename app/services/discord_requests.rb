@@ -30,39 +30,20 @@ class DiscordRequests < ApplicationServices
           <td><div class='pricing_row'>#{pricing_string}</div></td>
         </tr>"
     end
-
+    #convert HTML to Image file and save it to public folder
     kit = IMGKit.new(prepare_html(rows_content))
     file = kit.to_file("public/nft_reports/stats.jpg")
 
-    # body = {
-    #   "username" => "Testing NFT Analytics",
-    #   "avatar_url" => "https://i.imgur.com/4M34hi2.png",
-    #   "embeds" => [{
-    #     "title" => "Top 5 NFTs",
-    #     "color" => 15258703,
-    #     "image" => {
-    #       "url"=> "http://efa8-210-89-62-14.ngrok.io/nft_reports/#{file.path.split("/")[-1]}"
-    #     }
-    #     }]
-    #   }
     body = {
       "username": "Testing NFT Analytics",
       "avatar_url": "https://i.imgur.com/4M34hi2.png",
       "content": "**Top 5 NFTs**",
-      # "embeds": [{
-      #   "title": "Top 5 NFTs",
-      #   "color": 15258703,
-      #   "image": {
-      #     "url": "attachment://#{file.path.split("/")[-1]}}"
-      #   }
-      #   }], 
       "attachments": [{
           "id": 0,
-          "description": "Image of a cute little cat",
+          "description": "Top 5 nfts",
           "filename": file
       }]
       }
-  
     response = HTTParty.post(URL, headers: HEADERS, body: body)
   end
 
@@ -83,7 +64,7 @@ class DiscordRequests < ApplicationServices
         number_of_sales: data["total_sales"],
         number_of_sales_change: last_record.present? ? self.get_change_in_percentage(data["total_sales"], last_record[0]["total_sales"]) : "N/A",
         total_listed: data["total_listed"],
-        total_listed_change: last_record.present? ? data["total_listed"] - last_record[0]["total_listed"] : "N/A",
+        total_listed_change: last_record.present? ? (data["total_listed"] - last_record[0]["total_listed"]).round(2) : "N/A",
         pricing: data["pricing"].sort_by{|k,v| k.to_i}.to_h,
         last_fetched_pricing: last_record.present? ? last_record[0]["pricing"].sort_by{|k,v| k.to_i}.to_h : {}
       }

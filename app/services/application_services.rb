@@ -7,8 +7,7 @@ class ApplicationServices
         top_collections = HashWithIndifferentAccess.new(top_collections.value)
         collections = top_collections[parse_to_string(time)]
 
-        puts collections.count
-        collections_data = [] 
+        collections_data = []
         collections && collections.map do |collection|
           collections_data << collection_formated_data(collection)
         end
@@ -96,19 +95,18 @@ class ApplicationServices
       def save_top_collections(collections)
         attributes = []
         collections.each do |collection|
+          collection_data = collection["collection"]
           attributes << {
-            slug: collection["collection"]["slug"],
-            name: collection["collection"]["name"],
-            description: collection["collection"]["description"],
-            url: collection["collection"]["external_url"],
-            stats: collection["collection"]["stats"],
-            details: collection["collection"],
-          }
+            slug: collection_data["slug"],
+            name: collection_data["name"],
+            description: collection_data["description"],
+            url: collection_data["external_url"],
+            stats: collection_data["stats"],
+            details: collection_data.except(:stats),
+          } if collection.present?
         end
-        if attributes.count > 0
-          collection = Collection.upsert_all(attributes, unique_by: :slug)
-        end
-        collection
+        return [] unless attributes.count > 0
+        Collection.upsert_all(attributes, unique_by: :slug)
       end
 
       def parse_to_string(time)

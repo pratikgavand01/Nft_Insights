@@ -36,4 +36,6 @@
 
 # Ignore application configuration
 /config/application.yml
+/config/newrelic.yml
+/config/schedule.rb
 /public/nft_reports/*

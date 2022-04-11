@@ -10,6 +10,7 @@ class CreateCollections < ActiveRecord::Migration[7.0]
 
       t.timestamps
     end
+    add_index :collections, :id, unique: true
     add_index :collections, :slug, unique: true
   end
 end

@@ -50,6 +50,7 @@ end
 gem 'imgkit', '~> 1.6', '>= 1.6.2'
 gem 'wkhtmltoimage-binary', '~> 0.12.4'
 gem 'rexml', '~> 3.2', '>= 3.2.5'
+gem 'newrelic_rpm'
 
 group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
