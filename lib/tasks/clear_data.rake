@@ -8,9 +8,7 @@ namespace :clear_data do
 
   desc "Terminate Jobs Activity"
   task :terminate_jobs => [:environment] do |task, args|
-    JobsActivity.active.where("updated_at <= ?", 5.minutes.before).update_all(status: :terminate)
+    JobsActivity.active.where("updated_at <= ?", 2.minutes.before).update_all(status: :terminate)
   end
-
-
 
 end

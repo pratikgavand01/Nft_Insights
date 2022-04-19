@@ -1,4 +1,6 @@
 class CreateAssets < ActiveRecord::Migration[7.0]
+  TEXT_BYTES = 1_073_741_823
+
   def change
     create_table :assets do |t|
       t.string :token_id
@@ -6,8 +8,8 @@ class CreateAssets < ActiveRecord::Migration[7.0]
       t.string :description
       t.datetime :asset_contract_date
       t.string :asset_contract_address
-      t.text :url
-      t.text :img_url
+      t.text :url, limit: TEXT_BYTES
+      t.text :img_url, limit: TEXT_BYTES
       t.string :current_price
       t.string :last_event_type
       t.string :duration

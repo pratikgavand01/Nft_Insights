@@ -37,9 +37,9 @@ gem "bootsnap", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 # gem "rack-cors"
 
-gem 'kredis', '~> 1.1'
-gem 'httparty', '~> 0.20.0'
-gem 'figaro', '~> 1.2'
+gem 'kredis', '1.1'
+gem 'faraday', '1.10'
+gem 'figaro', '1.2'
 gem 'whenever', require: false
 
 group :development, :test do
@@ -48,7 +48,7 @@ group :development, :test do
 end
 
 gem 'imgkit', '~> 1.6', '>= 1.6.2'
-gem 'wkhtmltoimage-binary', '~> 0.12.4'
+gem 'wkhtmltoimage-binary', '0.12.4'
 gem 'rexml', '~> 3.2', '>= 3.2.5'
 gem 'newrelic_rpm'
 
@@ -57,3 +57,4 @@ group :development do
   # gem "spring"
 end
 
+gem 'paper_trail', '~> 12.3'

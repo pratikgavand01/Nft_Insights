@@ -1,4 +1,4 @@
-class ApplicationServices
+class ApplicationService
 
     class << self
 

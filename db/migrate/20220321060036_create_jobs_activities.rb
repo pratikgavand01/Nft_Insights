@@ -1,4 +1,5 @@
 class CreateJobsActivities < ActiveRecord::Migration[7.0]
+  TEXT_BYTES = 1_073_741_823
   def change
     create_table :jobs_activities do |t|
       t.integer :job_name
@@ -8,7 +9,7 @@ class CreateJobsActivities < ActiveRecord::Migration[7.0]
       t.integer :status
       t.integer :records_count, default: 0
       t.jsonb :log, default: {}
-      t.text :failed_reason
+      t.text :failed_reason, limit: TEXT_BYTES
 
       t.timestamps
     end
